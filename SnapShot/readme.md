@@ -1,13 +1,2 @@
-# Coin Clicker
-
-This is a simple coin clicker game. The goal is to click the coin as many times as possible in the time limit.
-
-## Instructions
-
-1. Clone the repository.
-2. Install dependencies with `npm install`.
-3. Start the development server with `npm run dev`.
-4. If you want to build the project, run `npm run build`.
-
-
-![screenshot](screenshot.png)
+#SnapShot
+SnapShot은 병뚜껑을 목표에 가까이 위치시켜 최고 점수를 기록하는 캐주얼한 슈팅 게임입니다.
