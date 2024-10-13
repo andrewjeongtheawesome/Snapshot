@@ -1,3 +1,4 @@
+//test
 let config = {
     type: Phaser.AUTO,
     width: 1200,
