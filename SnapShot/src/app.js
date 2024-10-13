@@ -59,16 +59,28 @@ function create() {
     // 배경을 흰색으로 설정
     this.cameras.main.setBackgroundColor('#ffffff');
     
-    // 긴 테이블을 배경으로 그리기
+    // 테이블 높이 및 낭떠러지 영역 설정
     tableHeight = 3000;  // 테이블을 훨씬 더 길게 설정
+    fallingZoneHeight = 500;  // 낭떠러지 공간을 더 크게 설정
     let graphics = this.add.graphics();
-    graphics.fillStyle(0x87CEEB, 1);  // 파란 배경
+    
+    // 테이블을 그리고 낭떠러지 영역 추가
+    graphics.fillStyle(0x87CEEB, 1);  // 파란 테이블
     graphics.fillRoundedRect(100, 0, 1000, tableHeight, 50);  // 긴 라운드 테이블
 
-    // 병뚜껑 생성
+    // 낭떠러지 영역 추가 (테이블 아래)
+    graphics.fillStyle(0xdddddd, 1);  // 낭떠러지 영역 색상 (회색)
+    graphics.fillRect(100, tableHeight, 1000, fallingZoneHeight);  // 낭떠러지 영역 그리기
+
+    // 병뚜껑 및 새총의 위치 설정 (테이블 끝에 위치하도록 조정)
+    slingshotAnchorX = 600;  // 새총 기준 위치 조정
+    slingshotAnchorY = tableHeight - 50;  // 새총이 테이블 끝에 배치
+    bottleCapOriginalY = tableHeight - 100;  // 병뚜껑이 새총에 위치하는 기본 위치
+
+    // 병뚜껑 생성 (테이블 끝으로 위치 변경)
     bottleCap = this.physics.add.sprite(slingshotAnchorX, bottleCapOriginalY, 'bottlecap');
     bottleCap.setScale(0.3);
-    bottleCap.setCollideWorldBounds(true);
+    bottleCap.setCollideWorldBounds(false);  // 테이블 끝에서 벗어날 수 있도록 설정
     bottleCap.setInteractive();
     
     // 마찰력 추가
@@ -78,20 +90,24 @@ function create() {
     // 병뚜껑 개수, 최고 기록, 현재 위치 표시 바
     bottleCountText = this.add.text(20, 100, `병뚜껑 x${triesLeft}`, { fontSize: '24px', fill: '#000' });
     highestScoreText = this.add.text(1000, 20, `최고 기록: ${highestScore}cm`, { fontSize: '24px', fill: '#000' });
-    
-    // 미니맵 병뚜껑 위치 표시 재디자인
+
+    // 미니맵 틀 그리기 - 항상 화면에 고정된 위치에 표시
     miniMapCap = this.add.graphics();
-    drawMiniMap(1125, 100, 50);  // 더 크고 둥근 미니맵 그리기
+    drawMiniMap();  // 화면 오른쪽에 미니맵 고정
 
     // 카메라를 병뚜껑에 따라가도록 설정
     camera = this.cameras.main;
-    camera.setBounds(0, 0, 1200, tableHeight);  // 카메라 범위를 긴 테이블 끝까지 설정
+    camera.setBounds(0, 0, 1200, tableHeight + fallingZoneHeight);  // 카메라 범위를 낭떠러지 끝까지 설정
     camera.startFollow(bottleCap, true, 0.05, 0.05);  // 부드러운 카메라 이동
 
-    // 고무줄 생성
+    // 고무줄 생성 및 새총 끝 검은 원 추가 (테이블 끝쪽에 배치)
     slingshotLine = this.add.graphics();
     slingshotLine.lineStyle(4, 0x000000, 1);
     updateSlingshotLine(slingshotAnchorX, slingshotAnchorY);
+
+    // 새총 끝에 검은 원 추가 (병뚜껑 위치와 일치하도록 수정)
+    this.add.circle(slingshotAnchorX - 100, bottleCapOriginalY, 20, 0x000000);  // 왼쪽 원
+    this.add.circle(slingshotAnchorX + 100, bottleCapOriginalY, 20, 0x000000);  // 오른쪽 원
 
     // 병뚜껑 드래그 및 발사
     this.input.setDraggable(bottleCap);
@@ -119,26 +135,32 @@ function create() {
         }
     });
 
-    // 점수 계산을 위한 끝 라인 설정
+    // 점수 계산을 위한 끝 라인 설정 (테이블 상단)
     finishLineY = 50;  // 끝 라인의 Y 좌표 (화면 위쪽)
     finishLine = this.add.line(600, finishLineY, 0, 0, 1200, 0, 0xff0000);  // 빨간색으로 라인 표시
 }
 
-// 새로운 미니맵 디자인
-function drawMiniMap(x, y, radius) {
+function drawMiniMap() {
     miniMapCap.clear();
-    miniMapCap.fillStyle(0x00ff00, 1);  // 초록색으로 미니맵 배경
-    miniMapCap.fillRoundedRect(x - 30, y - 100, 100, 200, 20);  // 배경 크고 둥글게
-    miniMapCap.fillStyle(0xff0000, 1);  // 병뚜껑을 빨간색으로 표시
-    miniMapCap.fillCircle(x, y, radius);  // 병뚜껑 표시
-}
 
+    // 미니맵 틀을 화면에 고정된 위치에 그리기
+    miniMapCap.lineStyle(2, 0x000000, 1);  // 검은색 테두리
+    miniMapCap.strokeRoundedRect(1050, 20, 30, 200, 15);  // 고정된 위치의 세로로 긴 미니맵 (x, y, width, height, corner radius)
+    
+    // 미니맵 배경 색상
+    miniMapCap.fillStyle(0x87CEEB, 1);  // 파란 배경
+    miniMapCap.fillRoundedRect(1050, 20, 30, 200, 15);  // 배경 채우기
+    
+    // 병뚜껑 위치 표시 (빨간색으로 표시)
+    let relativeY = Phaser.Math.Clamp((bottleCap.y / tableHeight) * 200, 20, 220);  // 병뚜껑 위치 계산
+    miniMapCap.fillStyle(0xff0000, 1);  // 빨간색 병뚜껑
+    miniMapCap.fillCircle(1065, relativeY, 10);  // 병뚜껑 그리기
+}
 
 function handleBottleCapAction() {
     triesLeft -= 1;
     bottleCountText.setText(`병뚜껑 x${triesLeft}`);  // 병뚜껑 개수 업데이트
 
-    // 병뚜껑이 멈추고 점수 계산
     if (bottleCap.y > tableHeight - 100) {  // 공백 영역
         if (bottleCap.x < 500 || bottleCap.x > 700) {  // 낙 처리 (범위 밖이면 떨어짐)
             resetBottleCap(false);  // 낙 처리 (기록 미갱신)
@@ -153,35 +175,33 @@ function handleBottleCapAction() {
     }
 }
 
-
 function update() {
     if (gameOver) return;  // 게임 종료 시 더 이상 업데이트 하지 않음
 
-    // 병뚜껑이 멈춘 후 상태 처리
+    // 병뚜껑이 움직일 때마다 미니맵 업데이트
+    drawMiniMap();  // 병뚜껑의 이동에 따라 미니맵을 계속해서 업데이트
+
     if (!isDragging && bottleCap.body.speed < 5 && !isBottleCapStopped && bottleCap.body.velocity.length() > 0) {
-        // 병뚜껑이 멈췄을 때 처리
-        isBottleCapStopped = true;
+        if (bottleCap.y > tableHeight) {  // 병뚜껑이 낭떠러지 영역에 도달했는지 확인
+            handleBottleCapAction();
+        } else {
+            isBottleCapStopped = true;
+            handleBottleCapAction();  // 정상적인 병뚜껑 처리
+        }
 
-        // 병뚜껑이 멈춘 후에만 처리
-        handleBottleCapAction();
-
-        // 병뚜껑이 다 소진되었을 경우 게임 종료
         if (triesLeft <= 0) {
             endGame();
         }
     }
 
-    // 병뚜껑이 움직일 때마다 미니맵과 텍스트 업데이트
-    if (!isDragging && miniMapCap) {  // miniMapCap이 정의되었는지 확인
-        let relativeY = Phaser.Math.Clamp((bottleCap.y - 100) * 0.5, 100, 400);
+    if (!isDragging && miniMapCap) {  
+        let relativeY = Phaser.Math.Clamp((bottleCap.y / tableHeight) * 200, 20, 220);
         miniMapCap.clear();  // 기존 원 지우기
         miniMapCap.fillStyle(0xff0000, 1);  // 빨간색으로 채우기
-        miniMapCap.fillCircle(1125, relativeY, 10);  // 새로운 위치에 원 그리기
+        miniMapCap.fillCircle(1065, relativeY, 10);  // 새로운 위치에 원 그리기
 
-        // 병뚜껑 개수 및 최고 기록 표시도 함께 시점에 맞춰 이동
         if (bottleCountText) bottleCountText.setPosition(camera.scrollX + 20, camera.scrollY + 100);
         if (highestScoreText) highestScoreText.setPosition(camera.scrollX + 1000, camera.scrollY + 20);
-        if (currentPositionBar) currentPositionBar.setPosition(camera.scrollX + 1100, camera.scrollY + 100);
     }
 }
 
@@ -190,7 +210,6 @@ function handleBottleCapAction() {
     triesLeft -= 1;
     bottleCountText.setText(`병뚜껑 x${triesLeft}`);  // 병뚜껑 개수 업데이트
 
-    // 기록 계산
     let distanceFromFinish = Math.abs(bottleCap.y - finishLineY);  // 끝 라인에서 떨어진 거리 계산
     if (highestScore === 0 || distanceFromFinish < highestScore) {
         highestScore = distanceFromFinish;
@@ -216,28 +235,19 @@ function resetBottleCap(success) {
 
 // 게임 종료
 function endGame() {
-    gameOver = true;
-    gameScene.add.text(600, 400, `게임 종료!\n최고 기록: ${highestScore.toFixed(1)}cm`, { fontSize: '32px', fill: '#ff0000' }).setOrigin(0.5);
-    bottleCap.disableInteractive();
-    camera.stopFollow();
-}
-
-function endGame() {
     gameOver = true;  // 게임 종료 플래그 설정
 
-    // 게임 종료 메시지 표시 (전역 변수를 통해 gameScene 참조)
     gameScene.add.text(600, 400, `게임 종료!\n최고 기록: ${highestScore.toFixed(1)}cm`, { fontSize: '32px', fill: '#ff0000' }).setOrigin(0.5);
 
-    // 병뚜껑을 더 이상 상호작용하지 않도록 제거
     bottleCap.disableInteractive();  // 병뚜껑을 다시 드래그할 수 없도록 비활성화
     camera.stopFollow();  // 카메라 멈춤
 }
 
-
-// 고무줄 모션 업데이트 함수
 function updateSlingshotLine(endX, endY) {
     slingshotLine.clear();
     slingshotLine.lineStyle(4, 0x000000, 1);
-    slingshotLine.lineBetween(500, slingshotAnchorY, endX, endY);  // 왼쪽 고무줄
-    slingshotLine.lineBetween(700, slingshotAnchorY, endX, endY);  // 오른쪽 고무줄
+    
+    // 고무줄 시작 위치를 병뚜껑 아래쪽의 동그라미로 조정
+    slingshotLine.lineBetween(slingshotAnchorX - 100, bottleCapOriginalY, endX, endY);  // 왼쪽 고무줄
+    slingshotLine.lineBetween(slingshotAnchorX + 100, bottleCapOriginalY, endX, endY);  // 오른쪽 고무줄
 }
