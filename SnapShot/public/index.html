@@ -9,7 +9,24 @@
 <body>
     <div class="container">
         <h1>SNAPSHOT</h1>
-        <button id="start-btn">시작하기</button>
+        <form id="user-form">
+            <!--<label for="department">학과 선택:</label>-->
+           <select id="department">
+                <option value="" disabled selected>학과를 선택하세요</option>
+                <option value="Computer Software Engineering">컴퓨터소프트웨어공학과</option>
+                <option value="Information Security">정보보호학과</option>
+                <option value="Medical IT Engineering">의료IT공학과</option>
+                <option value="AI Big Data">AI 빅데이터학과</option>
+                <option value="Internet of Things">사물인터넷학과</option>
+                <option value="Metaverse&Gaming">메타버스&게임학과</option>
+                <option value="other">기타 (직접 입력)</option>
+            </select>
+            <input type="text" id="other-department" placeholder="학과 직접 입력" style="display:none;">
+            <!--<input type="text" id="department" placeholder="학과" required>-->
+            <input type="text" id="student-id" placeholder="학번">
+            <input type="text" id="name" placeholder="이름">
+            <button type="submit" id="start-btn">시작하기</button>
+        </form>
     </div>
 
     <!-- 게임이 시작되면 보여질 게임 영역 -->
@@ -20,5 +37,49 @@
 
     <!-- app.js 파일 불러오기 -->
     <script src="../src/app.js"></script>
+
+    <script>
+        //셀렉트 박스 변경 이벤트
+        document.getElementById('department').addEventListener('change', function() {
+            const otherDepartmentInput = document.getElementById('other-department');
+            if (this.value === 'other') {
+                otherDepartmentInput.style.display = 'block'; //'기타' 선택 시 입력란 보이기
+            } else {
+                otherDepartmentInput.style.display = 'none'; //다른 항목을 선택 시 입력란 숨기기
+            }
+        });
+
+        //제출 확인 이벤트
+        document.getElementById('user-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            let valid = true; //유효성 검사 결과 저장
+
+            const department = document.getElementById('department').value;
+            const studentId = document.getElementById('student-id').value;
+            const name = document.getElementById('name').value;
+
+            //유효성 검사
+            if (!department) {
+                alert('학과를 선택해 주세요.');
+                valid = false;
+            }
+            if (!/^\d{8}$/.test(studentId)) {
+                alert('학번은 8자리 숫자여야 합니다.');
+                valid = false;
+            }
+            if (!name) {
+                alert('이름을 입력해 주세요.');
+                valid = false;
+            }
+
+            //제출 중단
+            if (valid) {
+                document.querySelector('.container').style.display = 'none';  //제목, 버튼 숨기기
+                document.getElementById('game-container').style.display = 'block';  //게임 화면 보이기
+                startGame();
+            }
+        });
+    </script>
 </body>
 </html>
