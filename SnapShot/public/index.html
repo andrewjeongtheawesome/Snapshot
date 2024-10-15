@@ -5,6 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SnapShot</title>
     <link rel="stylesheet" href="style.css">
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+        
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyAZX7_fPX0B_-EA-OGvW6KmalFOGsQ3ZQU",
+          authDomain: "snapshot-4ad8f.firebaseapp.com",
+          projectId: "snapshot-4ad8f",
+          storageBucket: "snapshot-4ad8f.appspot.com",
+          messagingSenderId: "1004891389072",
+          appId: "1:1004891389072:web:35514d2ddafce071a42c15",
+          measurementId: "G-1CZJZJRGG3"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+         //데이터 저장
+         async function saveUserData(department, studentId, name) {
+            try {
+                await setDoc(doc(db, "users", studentId), {
+                    department: department,
+                    studentId: studentId,
+                    name: name,
+                });
+                console.log('Data saved successfully');
+            } catch (error) {
+                console.error('Error saving data: ', error);
+            }
+        }
+        window.saveUserData = saveUserData;
+      </script>
 </head>
 <body>
     <div class="container">
@@ -13,24 +52,24 @@
             <!--<label for="department">학과 선택:</label>-->
            <select id="department">
                 <option value="" disabled selected>학과를 선택하세요</option>
-                <option value="Computer Software Engineering">컴퓨터소프트웨어공학과</option>
-                <option value="Information Security">정보보호학과</option>
-                <option value="Medical IT Engineering">의료IT공학과</option>
-                <option value="AI Big Data">AI 빅데이터학과</option>
-                <option value="Internet of Things">사물인터넷학과</option>
-                <option value="Metaverse&Gaming">메타버스&게임학과</option>
+                <option value="컴퓨터소프트웨어공학과">컴퓨터소프트웨어공학과</option>
+                <option value="정보보호학과">정보보호학과</option>
+                <option value="의료IT공학과">의료IT공학과</option>
+                <option value="AI 빅데이터학과">AI 빅데이터학과</option>
+                <option value="사물인터넷학과">사물인터넷학과</option>
+                <option value="메타버스&게임학과">메타버스&게임학과</option>
                 <option value="other">기타 (직접 입력)</option>
             </select>
             <input type="text" id="other-department" placeholder="학과 직접 입력" style="display:none;">
             <!--<input type="text" id="department" placeholder="학과" required>-->
-            <input type="text" id="student-id" placeholder="학번">
-            <input type="text" id="name" placeholder="이름">
+            <input type="text" id="student-id" placeholder="학번" required>
+            <input type="text" id="name" placeholder="이름" required>
             <button type="submit" id="start-btn">시작하기</button>
         </form>
     </div>
 
     <!-- 게임이 시작되면 보여질 게임 영역 -->
-    <div id="game-container"></div>
+    <div id="game-container"> style="display: none;"></div>
 
     <!-- Phaser.js 라이브러리 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
@@ -42,12 +81,16 @@
         //셀렉트 박스 변경 이벤트
         document.getElementById('department').addEventListener('change', function() {
             const otherDepartmentInput = document.getElementById('other-department');
+            otherDepartmentInput.style.display = (this.value === 'other') ? 'block' : 'none';
+        });
+            /*
             if (this.value === 'other') {
                 otherDepartmentInput.style.display = 'block'; //'기타' 선택 시 입력란 보이기
             } else {
                 otherDepartmentInput.style.display = 'none'; //다른 항목을 선택 시 입력란 숨기기
             }
         });
+        */
 
         //제출 확인 이벤트
         document.getElementById('user-form').addEventListener('submit', function(event) {
@@ -56,11 +99,14 @@
             let valid = true; //유효성 검사 결과 저장
 
             const department = document.getElementById('department').value;
+            const otherDepartment = document.getElementById('other-department').value;
             const studentId = document.getElementById('student-id').value;
             const name = document.getElementById('name').value;
 
+            const selectedDepartment = department === 'other' ? otherDepartment : department;
+
             //유효성 검사
-            if (!department) {
+            if (!selectedDepartment) {
                 alert('학과를 선택해 주세요.');
                 valid = false;
             }
@@ -75,10 +121,12 @@
 
             //제출 중단
             if (valid) {
-                document.querySelector('.container').style.display = 'none';  //제목, 버튼 숨기기
-                document.getElementById('game-container').style.display = 'block';  //게임 화면 보이기
-                startGame();
-            }
+                document.querySelector('.container').style.display = 'none';
+                document.getElementById('game-container').style.display = 'block';
+
+                saveUserData(selectedDepartment, studentId, name);
+                startGame(); // 게임 시작 함수 호출
+                }
         });
     </script>
 </body>
